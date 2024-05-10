@@ -67,7 +67,7 @@ namespace Map
 
         public void OpenRandomDoors()
         {
-            int countDoorsToOpen = Random.Range(0, doors.Count+1);
+            int countDoorsToOpen = Random.Range(2, doors.Count + 1);
 
             List<Door> doorsToOpen = new List<Door>(doors);
             doorsToOpen.Shuffle();
@@ -78,31 +78,6 @@ namespace Map
                 doorsToOpen[i].hasWay = true;
             }
         }
-
-        public void OpenDoors(List<DoorType> doorTypes)
-        {
-            foreach (var door in doors)
-            {
-                if (doorTypes.Contains(door.type))
-                {
-                    door.hasWay = true;
-                    door.sprite.SetActive(false);
-                }
-            }
-        }
-
-        public void OpenDoor(DoorType doorType)
-        {
-            foreach (var door in doors)
-            {
-                if (door.type == doorType)
-                {
-                    door.hasWay = true;
-                    door.sprite.SetActive(false);
-                }
-            }
-        }
-
         public void OpenDoor(Vector2 direction)
         {
             foreach (var door in doors)
@@ -121,6 +96,18 @@ namespace Map
             foreach (var door in doors)
             {
                 if (doorTypes.Contains(door.type))
+                {
+                    door.hasWay = false;
+                    door.sprite.SetActive(true);
+                }
+            }
+        }
+
+        public void CloseDoor(Vector2 direction)
+        {
+            foreach (var door in doors)
+            {
+                if ((Vector2)door.point.localPosition == direction)
                 {
                     door.hasWay = false;
                     door.sprite.SetActive(true);

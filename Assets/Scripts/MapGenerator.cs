@@ -17,9 +17,6 @@ namespace Map
 
         List<Tile> spawnTiles = new List<Tile>();
         Tile[][] tilesGrid;
-        List<Vector3> spawnPoints = new List<Vector3>();
-
-        bool secondGenerate = false;
 
         private void Start()
         {
@@ -88,15 +85,7 @@ namespace Map
                 }
             }
 
-            List<Tile> _spawnTiles = new List<Tile>();
-            foreach (var item in spawnTiles)
-            {
-                _spawnTiles.Add(item.GetComponent<Tile>());
-            }
-
-            
             GenerateMaze();
-            MapTiles.Instance.SetMap(_spawnTiles);
         }
 
         private void CloseEdgeDoors(Tile tile, int xPos, int yPos)
@@ -124,6 +113,8 @@ namespace Map
             Tile currentTile = tilesGrid[0][0];
             Tile prevTile = null;
 
+            List<Tile> visitedTiles = new List<Tile> ();
+
             while((Vector2)currentTile.transform.localPosition != endPosition)
             {
                 List<Vector2> currentDirections = new List<Vector2>(directions);
@@ -140,20 +131,54 @@ namespace Map
                 if (prevTile != null)
                     currentDirections.Remove(currentTile.transform.localPosition - prevTile.transform.localPosition);
 
-                Vector2 direction = currentDirections[Random.Range(0, currentDirections.Count)];
-
-                //DoorType type;
-
+                bool isNewTile = false;
+                Vector2 direction = new Vector2();
+                int i = 0;
+                while (!isNewTile)
+                {
+                    i++;
+                    direction = currentDirections[Random.Range(0, currentDirections.Count)];
+                    isNewTile = !visitedTiles.Contains(tilesGrid[(int)(currentTile.transform.localPosition.x + direction.x)][(int)(currentTile.transform.localPosition.y + direction.y)]);
+                    if (i == 4)
+                    {
+                        if (currentTile.transform.localPosition.x < _collsSize - 1)
+                            direction = Vector2.right;
+                        else
+                            direction = Vector2.left;
+                        break;
+                    }
+                }
                 currentTile.OpenDoor(direction);
                 prevTile = currentTile;
                 currentTile = tilesGrid[(int)(prevTile.transform.localPosition.x + direction.x)][(int)(prevTile.transform.localPosition.y + direction.y)];
                 currentTile.OpenDoor(direction * -1);
+                visitedTiles.Add(currentTile);
             }
-
-            CheckMapFull();
+            CloseNeighboursDoors();
+            if (CheckMapFull())
+            {
+                
+                MapTiles.Instance.SetMap(spawnTiles);
+            }
         }
 
-
+        private void CloseNeighboursDoors()
+        {
+            foreach(Tile tile in spawnTiles)
+            {
+                var neighbours = GetNeighbourList(tile);
+                foreach(var door in tile.doors)
+                {
+                    foreach (var neighbour in neighbours)
+                    {
+                        if (neighbour.transform.position == door.point.position && !door.hasWay)
+                        {
+                            neighbour.CloseDoor(tile.transform.localPosition - neighbour.transform.localPosition);
+                        }
+                    }
+                }
+            }
+        }
 
         private List<Tile> GetNeighbourList(Tile currentTile)
         {
@@ -161,13 +186,13 @@ namespace Map
 
             foreach (var door in currentTile.doors)
                 foreach (var sptile in spawnTiles)
-                    if (sptile.transform.localPosition == door.point.position)
+                    if (sptile.transform.position == door.point.position)
                         neighbourList.Add(sptile);
 
             return neighbourList;
         }
             
-        private void CheckMapFull()
+        private bool CheckMapFull()
         {
             int countFullOpen = 0;
 
@@ -177,9 +202,12 @@ namespace Map
                     countFullOpen++;
             }
 
-            if(countFullOpen > spawnTiles.Count/3)
+            if (countFullOpen > spawnTiles.Count / 4)
+            {
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex); //change to regenerate
-
+                return false;
+            }
+            return true;
         }
     }
 }

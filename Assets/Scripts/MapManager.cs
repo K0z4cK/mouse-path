@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
-
+using UnityEngine.SceneManagement;
 
 namespace Map
 {
@@ -10,8 +10,9 @@ namespace Map
     public class MapManager : SingletonComponent<MapManager>
     {
         List<Tile> map = new List<Tile>();
-        [SerializeField] Transform player;
-        [SerializeField] Vector3 playerInTile = Vector3.forward; //rand vector 
+        [SerializeField] Mouse mouse;
+        //[SerializeField] Transform player;
+        //[SerializeField] Vector3 playerInTile = Vector3.forward; //rand vector 
         List<Tile> playerVisitedTile = new List<Tile>();
 
         [SerializeField] public UnityEvent<Tile> OnPlayerChangeTile;
@@ -20,20 +21,21 @@ namespace Map
             get => playerVisitedTile.Count;
         }
 
-        public Transform GetPlayerTransform()
+        /*public Transform GetPlayerTransform()
         {
             return player;
-        }
+        }*/
 
         public void UpdateTileList()
         {
             map = MapTiles.Instance.GetMap();
             OnPlayerChangeTile.AddListener(AddVisitedTile);
+            mouse.Init();
             //player = PlayerController.Instance.transform;
-            StartCoroutine(TargetPlayer());
+            //StartCoroutine(TargetPlayer());
         }
 
-        IEnumerator TargetPlayer()
+        /*IEnumerator TargetPlayer()
         {
             while (true)
             {
@@ -51,7 +53,7 @@ namespace Map
                 }
                 yield return 0.1f;
             }
-        }
+        }*/
 
         public void AddVisitedTile(Tile tile)
         {
@@ -80,9 +82,18 @@ namespace Map
             return findTile;
         }
 
-        public Tile GetPlayerNearestTile()
+        public Tile GetLastTile() => map[map.Count - 1];
+
+        public void Update()
+        {
+            if(Input.GetKeyDown(KeyCode.Space))
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex); //change to regenerate
+
+        }
+
+        /*public Tile GetPlayerNearestTile()
         {
            return GetNearestTile(player.position);
-        }
+        }*/
     }
 }

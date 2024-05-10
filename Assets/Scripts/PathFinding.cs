@@ -126,7 +126,7 @@ namespace Map
 
                 foreach (var door in currentNode.tile.doors)
                     foreach (var pathNode in map)
-                        if (pathNode.tile.transform.localPosition == door.point.position && door.hasWay)
+                        if (pathNode.tile.transform.position == door.point.position && door.hasWay)
                             neighbourList.Add(pathNode);
                 currentNode.neighbors = neighbourList;
                 return neighbourList;
