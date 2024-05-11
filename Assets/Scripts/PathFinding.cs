@@ -10,11 +10,14 @@ namespace Map
     {
         public class PathFinding : SingletonComponent<PathFinding>
         {
+            private List<PathNode> visitedList = new List<PathNode>();
 
             private List<PathNode> openList = new List<PathNode>();
             private List<PathNode> closedList = new List<PathNode>();
             List<PathNode> map = new List<PathNode>();
             bool haveMap = false;
+
+            private PathNode _endNode;
 
             public void UpdateRoomList()
             {
@@ -27,7 +30,6 @@ namespace Map
             {
                 PathNode roomS = null;
                 PathNode roomE = null;
-
 
                 if (startNode == null || endNode == null)
                     return null;
@@ -57,6 +59,114 @@ namespace Map
                 }
             }
 
+            public void SetPathStart(Tile startTile, Tile endTile)
+            {
+                PathNode startNode = null;
+                PathNode endNode = null;
+
+                if (startTile == null || endTile == null)
+                    return;
+
+                foreach (var item in map)
+                {
+                    if (item.tile.centerPoint.position == endTile.centerPoint.position)
+                        endNode = item;
+                    if (item.tile.centerPoint.position == startTile.centerPoint.position)
+                        startNode = item;
+                }
+
+                if (startNode == null || endNode == null)
+                    return;
+
+                if (startNode == null || endNode == null || !haveMap)
+                {
+                    return;
+                }
+
+                foreach (var room in map)
+                {
+                    room.gCost = int.MaxValue;
+                    room.CalculateFCost();
+                    room.cameFromNode = null;
+                }
+
+                _endNode = endNode;
+                
+                startNode.gCost = 0;
+                startNode.hCost = CalculateDistanceCost(startNode, endNode);
+                startNode.CalculateFCost();
+                visitedList.Add(startNode);
+            }
+
+            public PathNode GetNextNode(Vector3 position)
+            {
+                PathNode currentNode = map.Find(x => x.tile.centerPoint.position == position);
+                visitedList.Add(currentNode);
+
+                var neighbours = GetNeighbourList(currentNode);
+
+                PathNode bestNode = null;
+
+                List<PathNode> visitedNeighbours = new List<PathNode>();
+
+                foreach (PathNode neighbourNode in neighbours)
+                {
+                    if (visitedList.Contains(neighbourNode))
+                    {
+                        visitedNeighbours.Add(neighbourNode);
+                        continue;
+                    }
+                    if (!neighbourNode.isWalkable)
+                    {
+                        visitedList.Add(neighbourNode);
+                        continue;
+                    }
+
+                    int tentativeGCost = currentNode.gCost + CalculateDistanceCost(currentNode, neighbourNode);
+                    if (tentativeGCost <= neighbourNode.gCost)
+                    {                    
+                        neighbourNode.cameFromNode = currentNode;
+                        neighbourNode.gCost = tentativeGCost;
+                        neighbourNode.hCost = CalculateDistanceCost(neighbourNode, _endNode); neighbourNode.CalculateFCost();
+
+                        if(bestNode == null)
+                            bestNode = neighbourNode;
+
+                        /*if (bestNode.gCost < neighbourNode.gCost)
+                            bestNode = neighbourNode;*/
+
+                        if (bestNode.fCost > neighbourNode.fCost)
+                            bestNode = neighbourNode;
+                    }
+                }
+
+                if (bestNode != null)
+                    return bestNode;
+
+                /*foreach (PathNode neighbourNode in neighbours)
+                {
+                    if (!neighbourNode.isWalkable)
+                    {
+                        visitedList.Add(neighbourNode);
+                        continue;
+                    }
+
+                    if (bestNode == null)
+                        bestNode = currentNode.cameFromNode;
+
+                    //print("second foreach: " + tentativeGCost + " to " + neighbourNode.gCost);
+                    if (bestNode.hCost > neighbourNode.hCost)
+                    {
+                        bestNode = neighbourNode;
+                    }
+                }
+                if (bestNode != null)
+                    return bestNode;*/
+
+                return currentNode.cameFromNode;
+            }
+
+
             private List<PathNode> FindPath(PathNode startNode, PathNode endNode)
             {
                 if (startNode == null || endNode == null || !haveMap)
@@ -78,6 +188,8 @@ namespace Map
                 startNode.hCost = CalculateDistanceCost(startNode, endNode);
                 startNode.CalculateFCost();
 
+                startNode.tile.ShowCosts(startNode.fCost, startNode.gCost, startNode.hCost);
+
                 while (openList.Count > 0)
                 {
                     PathNode currentNode = GetLowestFCostNode(openList);
@@ -85,6 +197,7 @@ namespace Map
                     {
                         // Reached final node
                         return CalculatePath(endNode);
+
                     }
 
                     openList.Remove(currentNode);
@@ -105,6 +218,8 @@ namespace Map
                             neighbourNode.cameFromNode = currentNode;
                             neighbourNode.gCost = tentativeGCost;
                             neighbourNode.hCost = CalculateDistanceCost(neighbourNode, endNode); neighbourNode.CalculateFCost();
+
+                            neighbourNode.tile.ShowCosts(neighbourNode.fCost, neighbourNode.gCost, neighbourNode.hCost);
 
                             if (!openList.Contains(neighbourNode))
                             {

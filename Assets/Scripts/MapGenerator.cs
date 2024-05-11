@@ -1,3 +1,4 @@
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -23,15 +24,6 @@ namespace Map
             GenerateTiles();
         }
 
-        /*void FindFirstGenTiles()
-        {
-            foreach (var _tile in tiles)
-                if (_tile.GetComponent<Tile>().openDoors > 1)
-                    firstGenTiles.Add(_tile);
-                else
-                    tilesWithOneWay.Add(_tile);
-        }*/
-
         public void GenerateTiles(int rowsSize, int collsSize)
         {
             _rowsSize = rowsSize;
@@ -41,33 +33,7 @@ namespace Map
 
         public void GenerateTiles()
         {
-            //FindFirstGenTiles();
-            /*var startTile = Instantiate(tilePrefab, grid);
-            startTile.OpenRandomDoors();
-            spawnTiles.Add(startTile.gameObject);
-            AddNewSpawnPosition(startTile.gameObject);
-            int generateTiles = 1;
-
-            while (generateTiles < amountTiles || spawnPoints.Count > 0)
-            {
-                if (spawnPoints.Count == 0)
-                    if (generateTiles < amountTiles)
-                        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex); //change to regenerate
-                    else
-                        break;
-
-                if ((spawnTiles.Count + spawnPoints.Count) >= amountTiles)
-                    secondGenerate = true;
-
-                var spawnPoint = spawnPoints[Random.Range(0, spawnPoints.Count)];
-                var createTile = CreateTile(spawnPoint);
-                spawnTiles.Add(createTile);
-                spawnPoints.Remove(spawnPoint);
-                AddNewSpawnPosition(createTile);
-                generateTiles++;
-            }*/
-
-            grid.position = new Vector2(-(_collsSize / 2) + 0.5f, -(_rowsSize / 2) + 0.5f);
+            grid.position = new Vector2(-(_collsSize / 2) , -(_rowsSize / 2) );
 
             tilesGrid = new Tile[_collsSize][];
             for(int x = 0; x < _collsSize; x++)
@@ -85,7 +51,7 @@ namespace Map
                 }
             }
 
-            GenerateMaze();
+            SpawnGameObjects();
         }
 
         private void CloseEdgeDoors(Tile tile, int xPos, int yPos)
@@ -103,19 +69,33 @@ namespace Map
             tile.CloseDoors(types);
         }
 
-        private void GenerateMaze()
+        private void SpawnGameObjects()
         {
+            Transform mouse = MapManager.Instance.Mouse.transform;
+            Transform cheese = MapManager.Instance.Cheese.transform;
+
+            Vector2 randomPosition = tilesGrid[Random.Range(0, _collsSize)][Random.Range(0, _rowsSize)].transform.position;
+
+            mouse.position = randomPosition;
+            randomPosition = tilesGrid[Random.Range(0, _collsSize)][ Random.Range(0, _rowsSize)].transform.position;
+            cheese.position = randomPosition;
+            GenerateMaze(mouse.position, cheese.position);
+        }
+
+        private void GenerateMaze(Vector2 startPosition, Vector2 endPosition)
+        {
+
             List<Vector2> directions = new List<Vector2>() {Vector2.left, Vector2.up, Vector2.right, Vector2.down};
 
-            Vector2 startPosition = new Vector2(0, 0);
-            Vector2 endPosition = new Vector2(_collsSize - 1, _rowsSize - 1);
+            Tile endTile = spawnTiles.Find(x => (Vector2)x.centerPoint.position == endPosition);
 
-            Tile currentTile = tilesGrid[0][0];
+
+            Tile currentTile = spawnTiles.Find(x => (Vector2)x.centerPoint.position == startPosition);
             Tile prevTile = null;
 
             List<Tile> visitedTiles = new List<Tile> ();
 
-            while((Vector2)currentTile.transform.localPosition != endPosition)
+            while(currentTile.transform.localPosition != endTile.transform.localPosition)
             {
                 List<Vector2> currentDirections = new List<Vector2>(directions);
 
@@ -141,10 +121,6 @@ namespace Map
                     isNewTile = !visitedTiles.Contains(tilesGrid[(int)(currentTile.transform.localPosition.x + direction.x)][(int)(currentTile.transform.localPosition.y + direction.y)]);
                     if (i == 4)
                     {
-                        if (currentTile.transform.localPosition.x < _collsSize - 1)
-                            direction = Vector2.right;
-                        else
-                            direction = Vector2.left;
                         break;
                     }
                 }

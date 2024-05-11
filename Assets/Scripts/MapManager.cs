@@ -11,6 +11,11 @@ namespace Map
     {
         List<Tile> map = new List<Tile>();
         [SerializeField] Mouse mouse;
+        public Mouse Mouse => mouse;
+
+        [SerializeField] Transform cheese;
+        public Transform Cheese => cheese;
+
         //[SerializeField] Transform player;
         //[SerializeField] Vector3 playerInTile = Vector3.forward; //rand vector 
         List<Tile> playerVisitedTile = new List<Tile>();
@@ -31,6 +36,7 @@ namespace Map
             map = MapTiles.Instance.GetMap();
             OnPlayerChangeTile.AddListener(AddVisitedTile);
             mouse.Init();
+            cheese.GetComponent<SpriteRenderer>().enabled = true;
             //player = PlayerController.Instance.transform;
             //StartCoroutine(TargetPlayer());
         }
@@ -82,12 +88,17 @@ namespace Map
             return findTile;
         }
 
+        public Tile GetMouseTile() => GetNearestTile(mouse.transform.position);
+        public Tile GetCheeseTile() => GetNearestTile(cheese.position);
+
         public Tile GetLastTile() => map[map.Count - 1];
 
         public void Update()
         {
             if(Input.GetKeyDown(KeyCode.Space))
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex); //change to regenerate
+            if (Input.GetKeyDown(KeyCode.Escape))
+                Application.Quit();
 
         }
 

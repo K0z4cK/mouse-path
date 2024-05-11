@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 
@@ -38,6 +39,10 @@ namespace Map
 
     public class Tile : MonoBehaviour
     {
+        [SerializeField] internal TMP_Text fCostText;
+        [SerializeField] internal TMP_Text gCostText;
+        [SerializeField] internal TMP_Text hCostText;
+
         [SerializeField] internal List<Door> doors;
 
         int _openDoors = -1;
@@ -127,6 +132,13 @@ namespace Map
                     return true;
 
             return false;
+        }
+
+        public void ShowCosts(int fCost, int gCost, int hCost)
+        {
+            fCostText.text = fCost.ToString();
+            gCostText.text = gCost.ToString();
+            hCostText.text = hCost.ToString();
         }
     }
 }
