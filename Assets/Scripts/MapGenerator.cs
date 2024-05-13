@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+
+public enum GameType {None, Start, Game, Customization }
 namespace Map
 {
     using Path;

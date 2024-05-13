@@ -1,12 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.Burst.CompilerServices;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
-
+public enum DoorType { None, Left, Right, Up, Down }
 namespace Map
 {
-    public enum DoorType { None, Left, Right, Up, Down }
     [System.Serializable]
     class Door
     {
@@ -37,7 +38,7 @@ namespace Map
         }
     }
 
-    public class Tile : MonoBehaviour
+    public class Tile : MonoBehaviour, IPointerClickHandler
     {
         [SerializeField] internal TMP_Text fCostText;
         [SerializeField] internal TMP_Text gCostText;
@@ -140,5 +141,21 @@ namespace Map
             gCostText.text = gCost.ToString();
             hCostText.text = hCost.ToString();
         }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            TileCustomize.Instance.ShowPanel(this);
+        }
+
+        /*private void Update()
+        {
+            if (Input.GetMouseButtonDown(0) && !EventSystem.current. && MapManager.Instance.GameMode != GameType.Customization)
+            {
+                Vector2 worldPoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                RaycastHit2D hit = Physics2D.Raycast(worldPoint, Vector2.zero);
+                if (hit.collider.gameObject == gameObject)
+                    TileCustomize.Instance.ShowPanel(this);
+            }
+        }*/
     }
 }

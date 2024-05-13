@@ -16,6 +16,11 @@ namespace Map
         [SerializeField] Transform cheese;
         public Transform Cheese => cheese;
 
+        [SerializeField] GameObject startPanel;
+        [SerializeField] GameObject pausePanel;
+
+        public GameType GameMode;
+
         //[SerializeField] Transform player;
         //[SerializeField] Vector3 playerInTile = Vector3.forward; //rand vector 
         List<Tile> playerVisitedTile = new List<Tile>();
@@ -35,10 +40,24 @@ namespace Map
         {
             map = MapTiles.Instance.GetMap();
             OnPlayerChangeTile.AddListener(AddVisitedTile);
-            mouse.Init();
+            mouse.GetComponent<SpriteRenderer>().enabled = true;
             cheese.GetComponent<SpriteRenderer>().enabled = true;
+            ChangeGameMode(GameType.Start);
             //player = PlayerController.Instance.transform;
             //StartCoroutine(TargetPlayer());
+        }
+
+        public void StartGame()
+        {
+            Time.timeScale = 1.0f;
+            startPanel.SetActive(false);
+            mouse.Init();
+            ChangeGameMode(GameType.Game);
+        }
+
+        public void RestartGame()
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
 
         /*IEnumerator TargetPlayer()
@@ -95,11 +114,23 @@ namespace Map
 
         public void Update()
         {
-            if(Input.GetKeyDown(KeyCode.Space))
+            if(Input.GetKeyDown(KeyCode.R))
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex); //change to regenerate
-            if (Input.GetKeyDown(KeyCode.Escape))
-                Application.Quit();
+            if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Space))
+            {
+                pausePanel.SetActive(true);
+                Time.timeScale = 0f;
+            }
+        }
 
+        public void ChangeGameMode(GameType type)
+        {
+            if (GameMode == GameType.Start)
+                startPanel.SetActive(false);
+            if (type == GameType.Start)
+                startPanel.SetActive(true);
+
+            GameMode = type;
         }
 
         /*public Tile GetPlayerNearestTile()
